@@ -51,6 +51,7 @@ CampusHub brings everyday university activities into one welcoming portal. Stude
 
 ```text
 CampusHub/
+├── .env.example              # Environment variable template
 ├── index.php                 # Public landing page
 ├── student.php               # Student portal
 ├── admin.php                 # Administrator portal
@@ -89,7 +90,12 @@ CampusHub/
 1. Clone or copy this project into your local web server directory.
 2. Create a MySQL database named `campushub`.
 3. Import the project's database schema and seed data if available.
-4. Open `config/db.php` and set the database host, username, password, and database name for your machine.
+4. Copy `.env.example` to `.env` and set the database host, username, password, and database name for your machine:
+
+  ```bash
+  copy .env.example .env
+  ```
+
 5. Ensure the `uploads/` directory is writable by the web server.
 6. Start the application from the project directory:
 
@@ -119,9 +125,9 @@ For Apache or XAMPP, place the project under the server's document root and open
 
 ## 🔐 Security Notes
 
-- Do not commit real database passwords or production credentials.
-- Use environment variables or a server-only configuration file for deployment.
-- Replace the development database credentials in `config/db.php` before sharing or deploying the project.
+- Do not commit `.env`, real database passwords, or production credentials.
+- Use `.env.example` as the shareable configuration template.
+- Configure deployment secrets through environment-specific secret management.
 - Validate uploads and restrict file permissions in the `uploads/` directory.
 
 ## 🌟 Project Vision
