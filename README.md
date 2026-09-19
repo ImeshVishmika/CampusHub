@@ -55,6 +55,8 @@ CampusHub/
 ├── index.php                 # Public landing page
 ├── student.php               # Student portal
 ├── admin.php                 # Administrator portal
+├── database/
+│   └── database.sql          # Database schema and seed data
 ├── api/                      # JSON/API handlers
 │   ├── announcements.php
 │   ├── auth.php
@@ -76,6 +78,62 @@ CampusHub/
 └── uploads/                  # Uploaded media files
 ```
 
+## 🗄️ Database Design
+
+The database is defined in [database/database.sql](database/database.sql) and uses MySQL with InnoDB foreign-key relationships.
+
+```mermaid
+erDiagram
+  USERS ||--o{ ANNOUNCEMENTS : creates
+  USERS ||--o{ EVENTS : organizes
+  USERS ||--o{ FORMS : creates
+  USERS ||--o{ MEDIA : uploads
+  USERS ||--o{ USER_NOTIFICATIONS : receives
+  USERS ||--o{ COMMUNITY_MEMBERS : joins
+  USERS ||--o{ COMMUNITY_MESSAGES : posts
+  USERS ||--o{ EVENT_REGISTRATIONS : makes
+  USERS ||--o{ FORM_SUBMISSIONS : submits
+
+  COMMUNITIES ||--o{ COMMUNITY_CHANNELS : contains
+  COMMUNITIES ||--o{ COMMUNITY_MEMBERS : has
+  COMMUNITIES ||--o{ MEDIA : includes
+  COMMUNITY_CHANNELS ||--o{ COMMUNITY_MESSAGES : contains
+
+  EVENTS ||--o{ EVENT_GROUPS : contains
+  EVENTS ||--o{ EVENT_REGISTRATIONS : receives
+  EVENTS ||--o{ MEDIA : documents
+  EVENT_GROUPS ||--o{ EVENT_REGISTRATIONS : assigns
+
+  FORMS ||--o{ FORM_FIELDS : defines
+  FORMS ||--o{ FORM_SUBMISSIONS : receives
+```
+
+### Main Tables
+
+| Table | Purpose | Important relationships |
+| --- | --- | --- |
+| `users` | Stores student and administrator accounts, profiles, roles, and status | Parent table for authored content, memberships, messages, registrations, submissions, and notifications |
+| `events` | Stores campus event details, schedules, locations, capacities, and status | Belongs to an organizing user; has groups, registrations, and media |
+| `event_groups` | Defines optional groups within an event | Belongs to an event and can contain registrations |
+| `event_registrations` | Tracks student event registration, attendance, and selected group | Links `users`, `events`, and `event_groups` |
+| `communities` | Stores clubs, departments, and organizations | Has channels, members, and media |
+| `community_members` | Maps users to communities with member, moderator, or admin roles | Many-to-many relationship between `users` and `communities` |
+| `community_channels` | Stores text, media, and announcement channels | Belongs to a community and contains messages |
+| `community_messages` | Stores messages and optional media attachments | Belongs to a channel and authoring user |
+| `announcements` | Stores campus updates with category, priority, audience, and status | Optionally created by a user |
+| `forms` | Stores administrator-created forms and their status | Has fields and submissions |
+| `form_fields` | Defines the fields, options, order, and required state for a form | Belongs to a form |
+| `form_submissions` | Stores submitted form responses as JSON | Links a form to the submitting user |
+| `media` | Stores uploaded file metadata and optional descriptions | Can link uploads to a user, community, or event |
+| `user_notifications` | Stores user-specific notifications and read status | Belongs to a user |
+
+### Relationship Rules
+
+- Deleting a community removes its channels, members, and messages through cascading relationships.
+- Deleting an event removes its groups and registrations; related media is detached rather than deleted.
+- Deleting a user removes memberships, registrations, submissions, and notifications, while authored announcements, events, forms, and media keep their records with a null author.
+- A unique constraint prevents the same user from joining the same community more than once.
+
 ## 🚀 Run Locally
 
 ### Requirements
@@ -89,7 +147,12 @@ CampusHub/
 
 1. Clone or copy this project into your local web server directory.
 2. Create a MySQL database named `campushub`.
-3. Import the project's database schema and seed data if available.
+3. Import the database schema and seed data from `database/database.sql`:
+
+  ```bash
+  mysql -u root -p < database/database.sql
+  ```
+
 4. Copy `.env.example` to `.env` and set the database host, username, password, and database name for your machine:
 
   ```bash
